@@ -6,13 +6,6 @@
 
 <title>عداد</title>
 
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="wts.png">
-
-<meta name="theme-color" content="#111111">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-
 <style>
 *{
     margin:0;
@@ -35,103 +28,131 @@ body{
     touch-action:manipulation;
 }
 
+/* العداد */
 #counter{
     font-size:40vw;
     font-weight:bold;
     line-height:1;
 }
 
-#resetBtn{
+/* الأزرار */
+.topBtn{
     position:fixed;
     top:12px;
-    left:50%;
-    transform:translateX(-50%);
-    width:32px;
-    height:32px;
+    width:44px;
+    height:44px;
     border:none;
     border-radius:50%;
-    background:red;
+    color:#fff;
+    font-size:22px;
+    font-weight:bold;
     cursor:pointer;
     z-index:1000;
-    box-shadow:0 0 10px rgba(255,0,0,.7);
+    box-shadow:0 0 10px rgba(0,0,0,.4);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    transition:0.15s;
 }
 
-#resetBtn:active{
-    transform:translateX(-50%) scale(.9);
+.topBtn:active{
+    transform:scale(.9);
+}
+
+/* زر النقصان */
+#minusBtn{
+    left:12px;
+    background:#007bff;
+}
+
+/* زر التصفير */
+#resetBtn{
+    right:12px;
+    background:red;
+}
+
+/* وميض الشاشة */
+#flash{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:white;
+    opacity:0;
+    pointer-events:none;
+    z-index:9999;
+}
+
+.flashActive{
+    animation: flashAnim 0.35s ease;
+}
+
+@keyframes flashAnim{
+    0%   {opacity:0;}
+    20%  {opacity:1;}
+    100% {opacity:0;}
 }
 </style>
 </head>
+
 <body>
 
-<button id="resetBtn" title="تصفير"></button>
+<button id="minusBtn" class="topBtn">−</button>
+<button id="resetBtn" class="topBtn">↻</button>
 
 <div id="counter">0</div>
+<div id="flash"></div>
 
 <script>
 let count = 0;
 
 const counter = document.getElementById("counter");
+const minusBtn = document.getElementById("minusBtn");
 const resetBtn = document.getElementById("resetBtn");
+const flash = document.getElementById("flash");
 
-function updateCounter() {
+function updateCounter(){
     counter.textContent = count;
 }
 
-let wakeLock = null;
-
-async function keepScreenAwake() {
-    try {
-        if ("wakeLock" in navigator) {
-            wakeLock = await navigator.wakeLock.request("screen");
-        }
-    } catch (err) {
-        console.log(err);
-    }
+/* تشغيل وميض الشاشة */
+function flashScreen(){
+    flash.classList.remove("flashActive");
+    void flash.offsetWidth; // إعادة تشغيل الأنيميشن
+    flash.classList.add("flashActive");
 }
 
-keepScreenAwake();
-
-document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") {
-        keepScreenAwake();
-    }
-});
-
+/* زيادة عند الضغط على الشاشة */
 document.body.addEventListener("click", (e) => {
-
-    if (e.target === resetBtn) return;
+    if(e.target === minusBtn || e.target === resetBtn) return;
 
     count++;
     updateCounter();
 
-    if (count >= 20) {
-
-        if (navigator.vibrate) {
-            navigator.vibrate([500,200,500,200,500]);
-        }
-
-        count = 0;
-        updateCounter();
+    if(count >= 20){
+        flashScreen();
+        setTimeout(() => {
+            count = 0;
+            updateCounter();
+        }, 350);
     }
 });
 
-resetBtn.addEventListener("click", (e) => {
-
+/* إنقاص */
+minusBtn.addEventListener("click", (e) => {
     e.stopPropagation();
+    if(count > 0) count--;
+    updateCounter();
+});
 
+/* تصفير */
+resetBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
     count = 0;
     updateCounter();
-
-    if (navigator.vibrate) {
-        navigator.vibrate(200);
-    }
+    flashScreen();
 });
-
-if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./service-worker.js");
-    });
-}
 </script>
 
 </body>
