@@ -3,7 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>عداد النقرات</title>
+
+<title>عداد</title>
+
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="wts.png">
+
+<meta name="theme-color" content="#111111">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 
 <style>
 *{
@@ -55,7 +63,7 @@ body{
 </head>
 <body>
 
-<button id="resetBtn" title="تصفير العداد"></button>
+<button id="resetBtn" title="تصفير"></button>
 
 <div id="counter">0</div>
 
@@ -65,11 +73,10 @@ let count = 0;
 const counter = document.getElementById("counter");
 const resetBtn = document.getElementById("resetBtn");
 
-function updateCounter(){
+function updateCounter() {
     counter.textContent = count;
 }
 
-// إبقاء الشاشة مضاءة
 let wakeLock = null;
 
 async function keepScreenAwake() {
@@ -78,7 +85,7 @@ async function keepScreenAwake() {
             wakeLock = await navigator.wakeLock.request("screen");
         }
     } catch (err) {
-        console.log("Wake Lock غير مدعوم:", err);
+        console.log(err);
     }
 }
 
@@ -90,19 +97,16 @@ document.addEventListener("visibilitychange", () => {
     }
 });
 
-// زيادة العداد عند النقر في أي مكان
-document.body.addEventListener("click", function(e){
+document.body.addEventListener("click", (e) => {
 
-    if(e.target === resetBtn) return;
+    if (e.target === resetBtn) return;
 
     count++;
     updateCounter();
 
-    // عند الوصول إلى 20
-    if(count >= 20){
+    if (count >= 20) {
 
-        // رج قوي للجهاز
-        if(navigator.vibrate){
+        if (navigator.vibrate) {
             navigator.vibrate([500,200,500,200,500]);
         }
 
@@ -111,21 +115,23 @@ document.body.addEventListener("click", function(e){
     }
 });
 
-// زر التصفير
-resetBtn.addEventListener("click", function(e){
+resetBtn.addEventListener("click", (e) => {
 
     e.stopPropagation();
 
     count = 0;
     updateCounter();
 
-    // رج خفيف عند التصفير
-    if(navigator.vibrate){
+    if (navigator.vibrate) {
         navigator.vibrate(200);
     }
 });
 
-updateCounter();
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./service-worker.js");
+    });
+}
 </script>
 
 </body>
